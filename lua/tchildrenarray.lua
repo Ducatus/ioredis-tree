@@ -1,5 +1,5 @@
 local getChildrenArray
-getChildrenArray = function (id, level, rootid, result)
+getChildrenArray = function (id, level, rootid, maxlevel, result)
   level = level - 1
   local value = redis.call('get', prefix .. id)
   if not value then
@@ -10,7 +10,7 @@ getChildrenArray = function (id, level, rootid, result)
   for i, v in ipairs(list) do
     local cid = v[1]
     local hasChild = v[2]
-    redis.call('sadd', rootid .. ':children', cid)
+    redis.call('sadd', rootid .. ':children:' .. maxlevel, cid)
 
     local item = { cid, hasChild }
 
@@ -18,7 +18,7 @@ getChildrenArray = function (id, level, rootid, result)
       if (cid == id) then
         return redis.error_reply("ERR infinite loop found in 'tchildrenarray' command")
       end
-      getChildrenArray(cid, level, rootid, item)
+      getChildrenArray(cid, level, rootid, maxlevel, item)
       if #item == 2 then
         v[2] = 0
       end
@@ -46,5 +46,5 @@ if level == 0 then
   return nil
 end
 
-getChildrenArray(id, level, id, {})
-return redis.call('smembers', id .. ':children')
+getChildrenArray(id, level, id, level, {})
+return redis.call('smembers', id .. ':children:' .. level)
