@@ -48,6 +48,31 @@ function RedisTree(redis) {
         };
     })(redis.tchildrenarray);
 
+    (function (tchildrenarraybylevelindex) {
+        redis.tchildren = function (key, node, options, callback) {
+            if (typeof options === 'function') {
+                callback = options;
+                options = null;
+            }
+            var argv = [key, node];
+            if (options && options.level != null) {
+                argv.push('LEVEL', options.level);
+            }
+            if (options && options.limit != null) {
+                argv.push('LIMIT', options.limit);
+            }
+            if (options && options.offset != null) {
+                argv.push('OFFSET', options.offset);
+            }
+            if (options && options.flowover != null) {
+                argv.push('FLOWOVER', options.flowover);
+            }
+            return asCallback(tchildrenarraybylevelindex.apply(redis, argv).then(function (res) {
+                return res;
+            }), callback);
+        };
+    })(redis.tchildrenarraybylevelindex);
+    
     (function (tancestors) {
         redis.tancestors = function (key, node, options, callback) {
             if (typeof options === 'function') {
