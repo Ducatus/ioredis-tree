@@ -49,7 +49,7 @@ function RedisTree(redis) {
     })(redis.tchildrenarray);
 
     (function (tchildrenarraybylevelindex) {
-        redis.tchildren = function (key, node, options, callback) {
+        redis.tchildrenarraybylevelindex = function (key, node, options, callback) {
             if (typeof options === 'function') {
                 callback = options;
                 options = null;

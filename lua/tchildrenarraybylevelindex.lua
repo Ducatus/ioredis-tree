@@ -1,5 +1,5 @@
 local getChildrenArrayByLevelIndex
-getChildrenArrayByLevelIndex = function (id, level, index, limit, offset, result)
+getChildrenArrayByLevelIndex = function (id, level, index, limit, offset, children, result)
   level = level - 1
   -- current level = maxlevel - level
   local value = redis.call('get', prefix .. id)
@@ -18,14 +18,17 @@ getChildrenArrayByLevelIndex = function (id, level, index, limit, offset, result
       if (cid == id) then -- If child ID == current node
         return redis.error_reply("ERR infinite loop found in 'tchildrenarray' command")
       end
-      getChildrenArrayByLevelIndex(cid, level, index, limit, offset, item)
+      getChildrenArrayByLevelIndex(cid, level, index, limit, offset, children, item)
       if #item == 2 then
         v[2] = 0
       end
     end
 
-    if level == 0 and #result ~= limit and index >= offset then -- if this is the level we're looking for
-        result[#result + 1] = cid
+    if result then
+        result[#result + 1] = item
+    end
+    if level == 0 and #children ~= limit then -- and index >= offset then -- if this is the level we're looking for
+        children[#children + 1] = cid
     end
 
     if level == 0 then -- if this is the level we're looking for
@@ -40,7 +43,7 @@ end
 local level = 1
 local limit = 50
 local offset = 0
-local flowover = true
+local flowover = 'true'
 local index = 0
 
 if ARGV[2] then
@@ -79,6 +82,7 @@ if ARGV[8] then
   end
 end
 
+
 if level == 0 then
   return nil
 end
@@ -92,11 +96,16 @@ end
 --   flowover, // Whether to continue after hitting the maxlevel (USER SET)
 --   Result) // An array  
 local result = {}
-getChildrenArrayByLevelIndex(id, level, index, limit, offset, result) 
+getChildrenArrayByLevelIndex(id, level, index, limit, offset, result, {}) 
 
-while #result ~= limit and flowover == true do
+while #result ~= limit and flowover == 'true' do
+    local size = #result
     level = level + 1
     getChildrenArrayByLevelIndex(id, level, index, limit, offset, result) 
+    if size == #result then  -- we've hit the end
+        return result
+    end
 end
+
 
 return result
