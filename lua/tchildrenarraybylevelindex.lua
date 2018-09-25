@@ -40,7 +40,7 @@ end
 local level = 1
 local limit = 50
 local offset = 0
-local flowover = false
+local flowover = true
 local index = 0
 
 if ARGV[2] then
