@@ -37,7 +37,10 @@ getChildrenArrayByLevelIndex = function (id, level, index, limit, offset, result
   return result
 end
 
-local level = -1
+local level = 1
+local limit = 50
+local offset = 0
+local flowover = false
 local index = 0
 
 if ARGV[2] then
